@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}{{ job.title }} | ResumeForge AI{% endblock %}
+
+{% block content %}
+<section class="panel reveal">
+    <div class="panel-header split">
+        <div>
+            <h1>{{ job.title }}</h1>
+            <p>{{ job.department }} - {{ job.location }} - {{ job.employment_type }}</p>
+        </div>
+        <a href="{{ url_for('landing') }}#open-roles" class="btn btn-outline">Back to Roles</a>
+    </div>
+
+    <article class="job-description">
+        <h2>Role Description</h2>
+        <p>{{ job.description }}</p>
+    </article>
+</section>
+
+<section class="panel reveal">
+    {% if current_user and current_user.role == 'user' %}
+        <div class="panel-header">
+            <h2>Apply to this Role</h2>
+            {% if has_applied %}
+                <p class="helper-text">You have already applied. Uploading again will replace your previous resume.</p>
+            {% else %}
+                <p class="helper-text">Submit your latest PDF resume for AI screening.</p>
+            {% endif %}
+        </div>
+
+        <form action="{{ url_for('apply_for_job', job_id=job.id) }}" method="post" enctype="multipart/form-data" class="apply-form">
+            <label>
+                Phone Number
+                <input type="text" name="phone" placeholder="+91 98765 43210">
+            </label>
+            <label>
+                Resume (PDF)
+                <input type="file" name="resume" accept=".pdf,.txt" required data-file-input>
+            </label>
+            <button type="submit" class="btn btn-solid">{% if has_applied %}Update Application{% else %}Submit Application{% endif %}</button>
+        </form>
+    {% elif current_user and current_user.role == 'admin' %}
+        <div class="panel-header">
+            <h2>Admin View</h2>
+            <p>This is the public job detail page. Use admin hub for candidate operations.</p>
+        </div>
+        <a href="{{ url_for('admin_dashboard') }}" class="btn btn-solid">Go to Admin Dashboard</a>
+    {% else %}
+        <div class="panel-header">
+            <h2>Want to apply?</h2>
+            <p>Create an account or log in to submit your resume.</p>
+        </div>
+        <a href="{{ url_for('login', next=url_for('job_detail', job_id=job.id)) }}" class="btn btn-solid">Login to Apply</a>
+    {% endif %}
+</section>
+{% endblock %}
+

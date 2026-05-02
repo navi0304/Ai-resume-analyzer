@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}ResumeForge AI | Smart Resume Screening{% endblock %}
+
+{% block content %}
+<section class="hero reveal">
+    <div class="hero-copy">
+        <span class="eyebrow">Built for real-world hiring teams</span>
+        <h1>Screen faster, shortlist smarter, and keep every decision visible.</h1>
+        <p>
+            ResumeForge AI turns uploaded resumes into ranked candidate insights using semantic matching,
+            skill extraction, and role-based collaboration between admins and applicants.
+        </p>
+        <div class="hero-actions">
+            {% if current_user and current_user.role == 'admin' %}
+                <a href="{{ url_for('admin_dashboard') }}" class="btn btn-solid">Open Admin Hub</a>
+            {% elif current_user and current_user.role == 'user' %}
+                <a href="{{ url_for('user_dashboard') }}" class="btn btn-solid">Open Talent Dashboard</a>
+            {% else %}
+                <a href="{{ url_for('signup') }}" class="btn btn-solid">Start as Candidate</a>
+                <a href="{{ url_for('login') }}" class="btn btn-outline">Login</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <aside class="hero-panel reveal">
+        <h2>Live Hiring Snapshot</h2>
+        <ul>
+            <li><span>Open Roles</span><strong>{{ stats.open_roles or 0 }}</strong></li>
+            <li><span>Applications Processed</span><strong>{{ stats.total_applications or 0 }}</strong></li>
+            <li><span>Registered Candidates</span><strong>{{ stats.registered_talent or 0 }}</strong></li>
+        </ul>
+        <p class="helper-text">Admins can publish jobs, run AI ranking, and update candidate status in one flow.</p>
+    </aside>
+</section>
+
+<section class="feature-grid">
+    <article class="feature-card reveal">
+        <h3>Semantic AI Matching</h3>
+        <p>Uses transformer embeddings to score each resume against role requirements, with fallback ranking for reliability.</p>
+    </article>
+    <article class="feature-card reveal">
+        <h3>Admin Operations Panel</h3>
+        <p>Create jobs, trigger bulk analysis, and track every application from submission to shortlist decisions.</p>
+    </article>
+    <article class="feature-card reveal">
+        <h3>Candidate Workspace</h3>
+        <p>Users get a clean dashboard to browse roles, upload resumes, and follow application status updates.</p>
+    </article>
+</section>
+
+<section id="open-roles" class="panel reveal">
+    <div class="panel-header">
+        <h2>Open Roles</h2>
+        <p>Apply directly from each role page. Re-uploads replace your older resume version.</p>
+    </div>
+
+    {% if jobs %}
+        <div class="job-grid" id="public-job-grid">
+            {% for job in jobs %}
+                <article class="job-card" data-card>
+                    <div class="job-meta">
+                        <span>{{ job.department }}</span>
+                        <span>{{ job.employment_type }}</span>
+                    </div>
+                    <h3>{{ job.title }}</h3>
+                    <p class="muted">{{ job.location }}</p>
+                    <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-ghost">View Role</a>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="empty-state">No active roles yet. Admins can publish roles from the dashboard.</p>
+    {% endif %}
+</section>
+{% endblock %}

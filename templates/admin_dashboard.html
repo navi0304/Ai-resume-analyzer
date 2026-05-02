@@ -1,0 +1,211 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard | AI resume Tacker{% endblock %}
+
+{% block content %}
+<section class="panel reveal">
+    <div class="panel-header split">
+        <div>
+            <h1>Admin Command Center</h1>
+            <p>Publish jobs, run AI scoring, and manage every candidate decision in one place.</p>
+        </div>
+        <a href="{{ url_for('landing') }}" class="btn btn-outline">Public Site</a>
+    </div>
+
+    <div class="stat-grid">
+        <article class="stat-card">
+            <span>Total Jobs</span>
+            <strong>{{ stats.total_jobs or 0 }}</strong>
+        </article>
+        <article class="stat-card">
+            <span>Active Jobs</span>
+            <strong>{{ stats.active_jobs or 0 }}</strong>
+        </article>
+        <article class="stat-card">
+            <span>Applications</span>
+            <strong>{{ stats.total_applications or 0 }}</strong>
+        </article>
+        <article class="stat-card">
+            <span>Shortlisted</span>
+            <strong>{{ stats.shortlisted_count or 0 }}</strong>
+        </article>
+    </div>
+</section>
+
+<section class="grid-two reveal">
+    <article class="panel">
+        <div class="panel-header">
+            <h2>Create New Job</h2>
+            <p>Publish role details for candidate applications.</p>
+        </div>
+
+        <form action="{{ url_for('create_job') }}" method="post" class="stack-form">
+            <label>
+                Role Title
+                <input type="text" name="title" placeholder="ML Engineer - Resume Intelligence" required>
+            </label>
+            <label>
+                Department
+                <input type="text" name="department" placeholder="AI Research" required>
+            </label>
+            <div class="split-fields">
+                <label>
+                    Location
+                    <input type="text" name="location" placeholder="Hyderabad" required>
+                </label>
+                <label>
+                    Employment Type
+                    <input type="text" name="employment_type" placeholder="Full-time" required>
+                </label>
+            </div>
+            <label>
+                Job Description
+                <textarea name="description" rows="6" placeholder="Include responsibilities, must-have skills, and outcomes." required></textarea>
+            </label>
+            <button type="submit" class="btn btn-solid">Publish Job</button>
+        </form>
+    </article>
+
+    <article class="panel">
+        <div class="panel-header">
+            <h2>Score Distribution</h2>
+            <p>Live distribution across all evaluated applications.</p>
+        </div>
+        <canvas id="score-distribution" height="220"></canvas>
+    </article>
+</section>
+
+<section class="panel reveal">
+    <div class="panel-header">
+        <h2>Job Management</h2>
+        <p>Analyze candidates only after enough applications arrive for each role.</p>
+    </div>
+
+    {% if jobs %}
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Role</th>
+                        <th>Applicants</th>
+                        <th>Avg AI Score</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for job in jobs %}
+                        <tr>
+                            <td>
+                                <strong>{{ job.title }}</strong>
+                                <div class="muted small">{{ job.department }} - {{ job.location }}</div>
+                            </td>
+                            <td>{{ job.applicants }}</td>
+                            <td>{{ job.average_score|percentage }}</td>
+                            <td>
+                                {% if job.is_active %}
+                                    <span class="pill pill-success">Active</span>
+                                {% else %}
+                                    <span class="pill pill-rejected">Paused</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="row-actions">
+                                    <a href="{{ url_for('admin_job_detail', job_id=job.id) }}" class="btn btn-ghost">Candidates</a>
+                                    <form action="{{ url_for('analyze_job', job_id=job.id) }}" method="post">
+                                        <button type="submit" class="btn btn-outline">Run AI</button>
+                                    </form>
+                                    <form action="{{ url_for('toggle_job', job_id=job.id) }}" method="post">
+                                        <button type="submit" class="btn btn-outline">{% if job.is_active %}Pause{% else %}Activate{% endif %}</button>
+                                    </form>
+                                </div>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="empty-state">No jobs yet. Publish your first role to start screening.</p>
+    {% endif %}
+</section>
+
+<section class="panel reveal">
+    <div class="panel-header">
+        <h2>Recent Applications</h2>
+        <p>Quick view of latest candidate activity.</p>
+    </div>
+
+    {% if recent_applications %}
+        <div class="table-wrap">
+            <table class="data-table compact">
+                <thead>
+                    <tr>
+                        <th>Candidate</th>
+                        <th>Role</th>
+                        <th>Score</th>
+                        <th>Status</th>
+                        <th>Top Skills</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in recent_applications %}
+                        <tr>
+                            <td>{{ item.candidate_name }}</td>
+                            <td>
+                                <a href="{{ url_for('admin_job_detail', job_id=item.job_id) }}">{{ item.job_title }}</a>
+                            </td>
+                            <td>{{ item.score|percentage }}</td>
+                            <td><span class="pill pill-{{ item.status }}">{{ item.status|title }}</span></td>
+                            <td>
+                                {% if item.skills %}
+                                    {% for skill in item.skills[:3] %}
+                                        <span class="tag">{{ skill }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="muted small">Pending analysis</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="empty-state">No applications received yet.</p>
+    {% endif %}
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const chartEl = document.getElementById('score-distribution');
+    if (chartEl) {
+        const data = {
+            labels: ['Unscored', 'Strong Fit', 'Moderate Fit', 'Weak Fit'],
+            datasets: [{
+                data: [
+                    {{ score_segments.unscored or 0 }},
+                    {{ score_segments.strong_fit or 0 }},
+                    {{ score_segments.moderate_fit or 0 }},
+                    {{ score_segments.weak_fit or 0 }}
+                ],
+                backgroundColor: ['#64748b', '#15803d', '#b45309', '#b91c1c'],
+                borderWidth: 0
+            }]
+        };
+
+        new Chart(chartEl, {
+            type: 'doughnut',
+            data,
+            options: {
+                plugins: {
+                    legend: { position: 'bottom' }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}
+

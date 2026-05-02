@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}
+    {% if mode == 'signup' %}Create Account | ResumeForge AI{% else %}Login | ResumeForge AI{% endif %}
+{% endblock %}
+
+{% block content %}
+<section class="auth-shell reveal">
+    <article class="auth-card">
+        {% if mode == 'signup' %}
+            <h1>Create your candidate account</h1>
+            <p>Track applications, upload resumes, and get shortlisted faster.</p>
+            <form action="{{ url_for('signup') }}" method="post" class="auth-form">
+                <label>
+                    Full Name
+                    <input type="text" name="name" placeholder="Aarav Sharma" required>
+                </label>
+                <label>
+                    Email
+                    <input type="email" name="email" placeholder="you@example.com" required>
+                </label>
+                <label>
+                    Password
+                    <input type="password" name="password" minlength="8" placeholder="Minimum 8 characters" required>
+                </label>
+                <button type="submit" class="btn btn-solid">Create Account</button>
+            </form>
+            <p class="form-switch">Already have an account? <a href="{{ url_for('login') }}">Login</a></p>
+        {% else %}
+            <h1>Welcome back</h1>
+            <p>Sign in as admin or candidate using your registered credentials.</p>
+            <form action="{{ url_for('login') }}" method="post" class="auth-form">
+                <input type="hidden" name="next" value="{{ next_url or '' }}">
+                <label>
+                    Email
+                    <input type="email" name="email" placeholder="you@example.com" required>
+                </label>
+                <label>
+                    Password
+                    <input type="password" name="password" required>
+                </label>
+                <button type="submit" class="btn btn-solid">Login</button>
+            </form>
+            <p class="form-switch">New here? <a href="{{ url_for('signup') }}">Create account</a></p>
+        {% endif %}
+    </article>
+</section>
+{% endblock %}
+

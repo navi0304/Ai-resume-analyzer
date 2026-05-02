@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}{{ job.title }} Candidates | Admin{% endblock %}
+
+{% block content %}
+<section class="panel reveal">
+    <div class="panel-header split">
+        <div>
+            <h1>{{ job.title }}</h1>
+            <p>{{ job.department }} - {{ job.location }} - {{ job.employment_type }}</p>
+        </div>
+        <div class="row-actions">
+            <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline">Back to Admin</a>
+            <form action="{{ url_for('analyze_job', job_id=job.id) }}" method="post">
+                <button type="submit" class="btn btn-solid">Run AI Analysis</button>
+            </form>
+        </div>
+    </div>
+    <p class="helper-text">AI analysis updates scores, extracted skills, and skill gaps for every application in this role.</p>
+</section>
+
+<section class="panel reveal">
+    <div class="panel-header">
+        <h2>Candidate Queue</h2>
+        <p>Move applications through stages as soon as evaluations are complete. Setting status to Shortlisted or Rejected sends an email to the candidate.</p>
+    </div>
+
+    {% if applications %}
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Candidate</th>
+                        <th>Resume</th>
+                        <th>Match</th>
+                        <th>Detected Skills</th>
+                        <th>Missing Skills</th>
+                        <th>Status & Notes</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for candidate in applications %}
+                        <tr>
+                            <td>
+                                <strong>{{ candidate.full_name }}</strong>
+                                <div class="muted small">{{ candidate.email }}</div>
+                                <div class="muted small">{{ candidate.phone or 'No phone shared' }}</div>
+                            </td>
+                            <td>
+                                <span class="tag">{{ candidate.resume_filename }}</span>
+                                <div class="row-actions" style="margin-top:0.45rem;">
+                                    <a href="{{ url_for('admin_application_resume', application_id=candidate.id) }}" class="btn btn-ghost">View Resume</a>
+                                </div>
+                            </td>
+                            <td>
+                                {% if candidate.score is not none %}
+                                    <div class="score-wrap">
+                                        <div class="score-bar">
+                                            <span style="width: {{ candidate.score * 100 }}%"></span>
+                                        </div>
+                                        <strong>{{ candidate.score|percentage }}</strong>
+                                    </div>
+                                {% else %}
+                                    <span class="muted small">Not analyzed yet</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if candidate.skills %}
+                                    {% for skill in candidate.skills %}
+                                        <span class="tag">{{ skill }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="muted small">No skills detected</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if candidate.missing %}
+                                    {% for skill in candidate.missing %}
+                                        <span class="tag tag-missing">{{ skill }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="muted small">No gap detected</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <form action="{{ url_for('update_application_status', application_id=candidate.id) }}" method="post" class="stack-form inline-form">
+                                    <input type="hidden" name="job_id" value="{{ job.id }}">
+                                    <select name="status" required>
+                                        {% for option in status_choices %}
+                                            <option value="{{ option }}" {% if option == candidate.status %}selected{% endif %}>{{ option|title }}</option>
+                                        {% endfor %}
+                                    </select>
+                                    <textarea name="notes" rows="2" placeholder="Optional notes">{{ candidate.notes or '' }}</textarea>
+                                    <button type="submit" class="btn btn-outline">Save</button>
+                                </form>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="empty-state">No candidates have applied to this role yet.</p>
+    {% endif %}
+</section>
+{% endblock %}
+
+

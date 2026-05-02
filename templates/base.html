@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}ResumeForge AI{% endblock %}</title>
+    <meta name="description" content="AI-powered resume screening with role-based admin and user portals.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/main.css') }}">
+</head>
+<body class="{{ body_class|default('') }}">
+    <div class="ambient ambient-one"></div>
+    <div class="ambient ambient-two"></div>
+
+    <header class="site-header">
+        <div class="container nav-wrap">
+            <a class="brand" href="{{ url_for('landing') }}">
+                <span class="brand-mark">RF</span>
+                <span>ResumeForge AI</span>
+            </a>
+
+            <button class="nav-toggle" type="button" aria-label="Toggle menu" data-nav-toggle>
+                <span></span>
+                <span></span>
+            </button>
+
+            <nav class="site-nav" data-nav-menu>
+                {% if current_user %}
+                    {% if current_user.role == 'admin' %}
+                        <a href="{{ url_for('admin_dashboard') }}">Admin Dashboard</a>
+                    {% else %}
+                        <a href="{{ url_for('user_dashboard') }}">Talent Dashboard</a>
+                        <a href="{{ url_for('browse_jobs') }}">Browse Jobs</a>
+                    {% endif %}
+                    <a href="{{ url_for('logout') }}" class="btn btn-outline">Logout</a>
+                {% else %}
+                    <a href="{{ url_for('landing') }}#open-roles">Open Roles</a>
+                    <a href="{{ url_for('login') }}">Login</a>
+                    <a href="{{ url_for('signup') }}" class="btn btn-solid">Create Account</a>
+                {% endif %}
+            </nav>
+        </div>
+    </header>
+
+    <main class="container page-shell">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <section class="flash-stack" aria-live="polite">
+                    {% for category, message in messages %}
+                        <article class="flash flash-{{ category }}" data-flash>
+                            <p>{{ message }}</p>
+                            <button type="button" class="flash-close" aria-label="Dismiss" data-flash-close>&times;</button>
+                        </article>
+                    {% endfor %}
+                </section>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>ResumeForge AI &copy; {{ current_year }}. Intelligent hiring workflows for modern teams.</p>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}" defer></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

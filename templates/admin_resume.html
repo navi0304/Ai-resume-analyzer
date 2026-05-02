@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}Resume Review | {{ application.full_name }}{% endblock %}
+
+{% block content %}
+<section class="panel reveal">
+    <div class="panel-header split">
+        <div>
+            <h1>{{ application.full_name }}</h1>
+            <p>{{ application.job_title }} - {{ application.email }}{% if application.phone %} - {{ application.phone }}{% endif %}</p>
+        </div>
+        <a href="{{ url_for('admin_job_detail', job_id=application.job_id) }}" class="btn btn-outline">Back to Candidates</a>
+    </div>
+
+    <div class="stat-grid">
+        <article class="stat-card">
+            <span>Status</span>
+            <strong style="font-size:1.05rem;">{{ application.status|title }}</strong>
+        </article>
+        <article class="stat-card">
+            <span>AI Match</span>
+            <strong style="font-size:1.05rem;">{{ application.score|percentage }}</strong>
+        </article>
+        <article class="stat-card">
+            <span>Uploaded File</span>
+            <strong style="font-size:1.05rem;">{{ application.resume_filename }}</strong>
+        </article>
+    </div>
+</section>
+
+<section class="panel reveal">
+    <div class="panel-header">
+        <h2>Resume Content</h2>
+        <p>Extracted text from the submitted file. Use this for manual verification alongside AI score.</p>
+    </div>
+
+    {% if application.resume_text %}
+        <pre style="white-space: pre-wrap; background:#fff; border:1px solid #d8d5cd; border-radius:12px; padding:1rem; max-height:65vh; overflow:auto;">{{ application.resume_text }}</pre>
+    {% else %}
+        <p class="empty-state">No resume text is available for this application.</p>
+    {% endif %}
+</section>
+{% endblock %}
+

@@ -1,0 +1,6 @@
+Flask>=3.0
+PyPDF2>=3.0
+scikit-learn>=1.5
+sentence-transformers>=2.7
+gunicorn>=22.0
+

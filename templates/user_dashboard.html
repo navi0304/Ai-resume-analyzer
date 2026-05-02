@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Talent Dashboard | AI resume Tracker{% endblock %}
+
+{% block content %}
+<section class="panel reveal">
+    <div class="panel-header split">
+        <div>
+            <h1>Talent Dashboard</h1>
+            <p>Browse active opportunities and keep your resume submissions updated.</p>
+        </div>
+        <form action="{{ url_for('browse_jobs') }}" method="get" class="search-form">
+            <input type="search" name="q" value="{{ query or '' }}" placeholder="Search by title, location, department">
+            <button type="submit" class="btn btn-outline">Search</button>
+        </form>
+    </div>
+
+    {% set total_apps = summary.total if summary is defined else (applications|length if applications is defined else 0) %}
+    {% set shortlisted = summary.shortlisted if summary is defined else 0 %}
+    {% set pending = summary.pending if summary is defined else 0 %}
+
+    <div class="stat-grid">
+        <article class="stat-card">
+            <span>Total Applications</span>
+            <strong>{{ total_apps }}</strong>
+        </article>
+        <article class="stat-card">
+            <span>Shortlisted</span>
+            <strong>{{ shortlisted }}</strong>
+        </article>
+        <article class="stat-card">
+            <span>Pending Review</span>
+            <strong>{{ pending }}</strong>
+        </article>
+    </div>
+</section>
+
+<section class="panel reveal">
+    <div class="panel-header">
+        <h2>Active Roles</h2>
+        <p>Apply once per role. Uploading again updates your latest resume for that role.</p>
+    </div>
+
+    {% if jobs %}
+        <div class="job-grid" id="job-grid">
+            {% for job in jobs %}
+                <article class="job-card" data-card>
+                    <div class="job-meta">
+                        <span>{{ job.department }}</span>
+                        <span>{{ job.employment_type }}</span>
+                    </div>
+                    <h3>{{ job.title }}</h3>
+                    <p class="muted">{{ job.location }}</p>
+                    <div class="job-actions">
+                        <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-ghost">View Role</a>
+                        {% if job.application_id %}
+                            <span class="pill pill-success">Applied</span>
+                        {% else %}
+                            <span class="pill">Open</span>
+                        {% endif %}
+                    </div>
+                </article>
+            {% endfor %}
+        </div>
+    {% else %}
+        <p class="empty-state">No roles matched your search yet.</p>
+    {% endif %}
+</section>
+
+{% if applications is defined %}
+<section class="panel reveal">
+    <div class="panel-header">
+        <h2>Your Application Pipeline</h2>
+        <p>Admin reviews update here once AI analysis is run.</p>
+    </div>
+
+    {% if applications %}
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Role</th>
+                        <th>Status</th>
+                        <th>AI Score</th>
+                        <th>Detected Skills</th>
+                        <th>Missing Skills</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for application in applications %}
+                        <tr>
+                            <td>
+                                <strong>{{ application.title }}</strong>
+                                <div class="muted small">{{ application.department }}</div>
+                            </td>
+                            <td><span class="pill pill-{{ application.status }}">{{ application.status|title }}</span></td>
+                            <td>{{ application.score|percentage }}</td>
+                            <td>
+                                {% if application.skills %}
+                                    {% for skill in application.skills %}
+                                        <span class="tag">{{ skill }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="muted small">No skills parsed yet</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if application.missing %}
+                                    {% for skill in application.missing %}
+                                        <span class="tag tag-missing">{{ skill }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="muted small">No gaps detected</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    {% else %}
+        <p class="empty-state">No applications yet. Start by applying to an open role above.</p>
+    {% endif %}
+</section>
+{% endif %}
+{% endblock %}
